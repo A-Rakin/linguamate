@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Your Learning Progress</h1>
+<p class="lead">Track your language learning journey</p>
+
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-header">Total Vocabulary</div>
+            <div class="card-body">
+                <h2 class="card-title display-4">{{ total_words }}</h2>
+                <p class="card-text">words learned</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-header">Recent Activity</div>
+            <div class="card-body">
+                <h2 class="card-title display-4">{{ recent_words }}</h2>
+                <p class="card-text">words added this week</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-header">Practice Sessions</div>
+            <div class="card-body">
+                <h2 class="card-title display-4">{{ total_practice_sessions }}</h2>
+                <p class="card-text">sessions completed</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-white bg-warning mb-3">
+            <div class="card-header">Words Practiced</div>
+            <div class="card-body">
+                <h2 class="card-title display-4">{{ total_words_practiced }}</h2>
+                <p class="card-text">total practices</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Proficiency Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label>Beginner (0-2)</label>
+                    <div class="progress">
+                        <div class="progress-bar bg-danger" role="progressbar"
+                             style="width: {{ (proficiency_distribution['Beginner (0-2)'] / total_words * 100) if total_words > 0 else 0 }}%">
+                            {{ proficiency_distribution['Beginner (0-2)'] }} words
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label>Intermediate (2-4)</label>
+                    <div class="progress">
+                        <div class="progress-bar bg-warning" role="progressbar"
+                             style="width: {{ (proficiency_distribution['Intermediate (2-4)'] / total_words * 100) if total_words > 0 else 0 }}%">
+                            {{ proficiency_distribution['Intermediate (2-4)'] }} words
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label>Advanced (4-5)</label>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" role="progressbar"
+                             style="width: {{ (proficiency_distribution['Advanced (4-5)'] / total_words * 100) if total_words > 0 else 0 }}%">
+                            {{ proficiency_distribution['Advanced (4-5)'] }} words
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Learning Summary</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <tr>
+                        <th>Target Language:</th>
+                        <td>{{ current_user.target_language }}</td>
+                    </tr>
+                    <tr>
+                        <th>Member Since:</th>
+                        <td>{{ current_user.created_at.strftime('%B %d, %Y') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Words by Language:</th>
+                        <td>
+                            {% for lang, count in words_by_language.items() %}
+                                {{ lang }}: {{ count }}<br>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Completion Rate:</th>
+                        <td>
+                            {% if total_words > 0 %}
+                                {{ ((proficiency_distribution['Advanced (4-5)'] / total_words) * 100)|round(1) }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-success">
+            <h5>🎉 Keep Going!</h5>
+            <p>You're making great progress! Set a goal to learn 10 new words this week and practice pronunciation daily.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

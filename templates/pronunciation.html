@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Pronunciation Practice</h1>
+<p class="lead">Listen to the words and practice your pronunciation</p>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Words to Practice</h5>
+            </div>
+            <div class="card-body">
+                {% if words %}
+                    <div id="practiceSection">
+                        {% for word in words %}
+                        <div class="word-card mb-4 p-3 border rounded" data-word="{{ word.word }}">
+                            <div class="row align-items-center">
+                                <div class="col-md-4">
+                                    <h3>{{ word.word }}</h3>
+                                    <p class="text-muted">{{ word.translation if word.translation else '' }}</p>
+                                </div>
+                                <div class="col-md-4">
+                                    <button onclick="speakWord('{{ word.word }}')" class="btn btn-primary">
+                                        🔊 Listen
+                                    </button>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="btn-group" role="group">
+                                        <button onclick="recordPractice('{{ word.word }}', true)"
+                                                class="btn btn-success">
+                                            ✓ Correct
+                                        </button>
+                                        <button onclick="recordPractice('{{ word.word }}', false)"
+                                                class="btn btn-danger">
+                                            ✗ Try Again
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-center">No words to practice. Add vocabulary words first!</p>
+                    <div class="text-center">
+                        <a href="{{ url_for('vocabulary') }}" class="btn btn-primary">Add Words</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Pronunciation Tips</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">🎯 Listen carefully to the native pronunciation</li>
+                    <li class="mb-2">🗣️ Repeat the word out loud at least 3 times</li>
+                    <li class="mb-2">🎙️ Record yourself and compare with the original</li>
+                    <li class="mb-2">📝 Try to use the word in a sentence</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function speakWord(word) {
+    fetch(`/speak/${encodeURIComponent(word)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                alert('Error playing pronunciation: ' + data.error);
+            }
+        });
+}
+
+function recordPractice(word, correct) {
+    fetch('/practice-result', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            word: word,
+            correct: correct
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const wordCard = document.querySelector(`[data-word="${word}"]`);
+            if (wordCard) {
+                if (correct) {
+                    wordCard.classList.add('bg-success', 'bg-opacity-25');
+                } else {
+                    wordCard.classList.add('bg-danger', 'bg-opacity-25');
+                }
+            }
+
+            setTimeout(() => {
+                if (wordCard) {
+                    wordCard.classList.remove('bg-success', 'bg-danger', 'bg-opacity-25');
+                }
+            }, 1000);
+
+            alert(correct ? 'Great job! Keep practicing!' : 'Keep trying! Practice makes perfect.');
+        }
+    });
+}
+</script>
+{% endblock %}
