@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h3>Add New Word</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.word.label(class="form-label") }}
+                        {{ form.word(class="form-control") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.translation.label(class="form-label") }}
+                        {{ form.translation(class="form-control") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.context.label(class="form-label") }}
+                        {{ form.context(class="form-control") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.proficiency.label(class="form-label") }}
+                        {{ form.proficiency(class="form-control", min="0", max="5") }}
+                    </div>
+                    {{ form.submit(class="btn btn-primary") }}
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3>My Vocabulary</h3>
+            </div>
+            <div class="card-body">
+                <div class="input-group mb-3">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search words...">
+                    <button class="btn btn-outline-secondary" type="button" onclick="searchWord()">Search</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Word</th>
+                                <th>Translation</th>
+                                <th>Context</th>
+                                <th>Proficiency</th>
+                                <th>Last Reviewed</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for word in vocabulary %}
+                            <tr>
+                                <td>{{ word.word }}</td>
+                                <td>{{ word.translation }}</td>
+                                <td>{{ word.context or '-' }}</td>
+                                <td>
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar"
+                                             style="width: {{ word.proficiency * 20 }}%;"
+                                             aria-valuenow="{{ word.proficiency }}"
+                                             aria-valuemin="0" aria-valuemax="5">
+                                            {{ word.proficiency }}/5
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ word.last_reviewed.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    <a href="{{ url_for('delete_word', word_id=word.id) }}"
+                                       class="btn btn-sm btn-danger"
+                                       onclick="return confirm('Are you sure?')">Delete</a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center">No words in your vocabulary yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="searchResultModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Word Search Result</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="searchResultBody">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function searchWord() {
+    const word = document.getElementById('searchInput').value;
+
+    fetch('/api/search-word', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({word: word})
+    })
+    .then(response => response.json())
+    .then(data => {
+        let message = '';
+        if (data.exists) {
+            message = `Word "${data.word}" found!<br>`;
+            if (data.translation) {
+                message += `Translation: ${data.translation}`;
+            }
+        } else {
+            message = `Word "${word}" not found in dictionary.`;
+        }
+
+        document.getElementById('searchResultBody').innerHTML = message;
+        new bootstrap.Modal(document.getElementById('searchResultModal')).show();
+    });
+}
+</script>
+{% endblock %}
